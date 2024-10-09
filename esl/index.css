@@ -1,11 +1,12 @@
-.container{
-    margin: 10px;
-    padding: 10px;
-  }
-  .section-green {
-    background-color: honeydew;
-    color: black;
+.container {
+  margin: 10px;
+  padding: 10px;
+}
+
+.section-green {
+  background-color: honeydew;
+  color: black;
   /*   border: 2px solid black; */
-    margin: 20px;
-    padding: 20px;  
-  }
+  margin: 20px;
+  padding: 20px;
+}

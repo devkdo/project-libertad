@@ -14,6 +14,8 @@ const A_LEVEL3 =
 const A_DAYMON = "Monday - lunes - segunda-feira";
 const A_DAYTUE = "Tuesday - martes - terça-feira";
 
+document.getElementById("btn-sort").addEventListener("click", processXLS);
+
 
 function processXLS() {
   const fileInput = document.getElementById("input-file");
@@ -77,7 +79,8 @@ function processXLS() {
       });
       const mondays = evenDistribute(monAny, mon1, mon2);
       const tuesdays = evenDistribute(tueAny, tue1, tue2);
-      displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      // displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      displayEmails(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
     };
     reader.readAsArrayBuffer(file);
   } else {
@@ -133,6 +136,23 @@ function evenDistribute(anyList, l1, l2) {
   return { beg: list1, nonbeg: list2 };
 }
 
+function getEmailString(list) {
+  let emails = "";
+  for (let student of list.values()) {
+    const entry = `"${student.name}"<${student.email}>,`;
+    emails += entry;
+  }
+  return emails;
+}
+
+function displayEmails(l1, l2, l3, l4) {
+  const emailstring = getEmailString(l1);
+  const output = document.getElementById("output");
+  output.classList.add("section-green");
+  output.innerHTML = `<h3>Mailing list</h3><b>Monday Beginner (${l1.length})</b>`;
+  output.textContent += emailstring;
+}
+
 function displayLists(l1, l2, l3, l4) {
   const output = document.getElementById("output");
   output.innerHTML = `<div class="section-green">
@@ -140,23 +160,22 @@ function displayLists(l1, l2, l3, l4) {
     l1,
     null,
     2
-  )}</div></pre>
+  )}</pre></div>
         <div class="section-green"><h3>Monday Non-Beginner (${l2.length})</h3><pre>${JSON.stringify(
     l2,
     null,
     2
-  )}</div></pre>
+  )}</pre></div>
         <div class="section-green"><h3>Tuesday Beginner (${l3.length})</h3><pre>${JSON.stringify(
     l3,
     null,
     2
-  )}</div></pre>
+  )}</pre></div>
         <div class="section-green"><h3>Tuesday Non-Beginner (${l4.length})</h3><pre>${JSON.stringify(
     l4,
     null,
     2
-  )}</div></pre>
+  )}</pre></div>
       `;
 }
 
-document.getElementById("btn-sort").addEventListener("click", processXLS);

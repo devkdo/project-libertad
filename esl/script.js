@@ -14,11 +14,10 @@ const A_LEVEL3 =
 const A_DAYMON = "Monday - lunes - segunda-feira";
 const A_DAYTUE = "Tuesday - martes - terça-feira";
 
+
 function processXLS() {
   const fileInput = document.getElementById("input-file");
   const file = fileInput.files[0];
-
-  console.log(file);
 
   if (file) {
     const reader = new FileReader();
@@ -94,16 +93,7 @@ function evenDistribute(anyList, l1, l2) {
   const listAny = anyList.slice();
   const lengthListAny = listAny.length;
 
-  console.log(
-    "START LENGTHS",
-    "sizeAny",
-    listAny.length,
-    lengthListAny,
-    "size1",
-    list1.length,
-    "size2",
-    list2.length
-  );
+  console.log(`Registered: beginner (${list1.length}), intermediate (${listAny.length}), advanced (${list2.length})`);
 
   let loop = 0;
   let done = false;
@@ -137,44 +127,36 @@ function evenDistribute(anyList, l1, l2) {
     }
     loop++;
   }
-  // console.log("loop count", loop);
-  console.log(
-    "FINAL LENGTHS",
-    "sizeAny",
-    listAny.length,
-    "size1",
-    list1.length,
-    "size2",
-    list2.length
-  );
+
+  console.log(`Distributed: beginner (${list1.length}), intermediate (${listAny.length}), nonbeginner (${list2.length})`);
+
   return { beg: list1, nonbeg: list2 };
 }
 
 function displayLists(l1, l2, l3, l4) {
   const output = document.getElementById("output");
-  output.innerHTML = `
+  output.innerHTML = `<div class="section-green">
         <h3>Monday Beginner (${l1.length})</h3><pre>${JSON.stringify(
     l1,
     null,
     2
-  )}</pre>
-        <h3>Monday Non-Beginner (${l2.length})</h3><pre>${JSON.stringify(
+  )}</div></pre>
+        <div class="section-green"><h3>Monday Non-Beginner (${l2.length})</h3><pre>${JSON.stringify(
     l2,
     null,
     2
-  )}</pre>
-        <h3>Tuesday Beginner (${l3.length})</h3><pre>${JSON.stringify(
+  )}</div></pre>
+        <div class="section-green"><h3>Tuesday Beginner (${l3.length})</h3><pre>${JSON.stringify(
     l3,
     null,
     2
-  )}</pre>
-        <h3>Tuesday Non-Beginner (${l4.length})</h3><pre>${JSON.stringify(
+  )}</div></pre>
+        <div class="section-green"><h3>Tuesday Non-Beginner (${l4.length})</h3><pre>${JSON.stringify(
     l4,
     null,
     2
-  )}</pre>
+  )}</div></pre>
       `;
 }
 
-// document.getElementById("input-file").addEventListener("change", processXLS);
 document.getElementById("btn-sort").addEventListener("click", processXLS);

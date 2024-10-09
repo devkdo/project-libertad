@@ -76,13 +76,77 @@ function processXLS() {
             break;
         }
       });
-
-      displayLists(mon1, mon2, tue1, tue2);
+      evenDistribute(monAny, mon1, mon2);
+      evenDistribute(tueAny, tue1, tue2);
+      // displayLists(mon1, mon2, tue1, tue2);
     };
     reader.readAsArrayBuffer(file);
   } else {
     alert("Please upload an XLS/XLSX file.");
   }
+}
+
+function evenDistribute(anyList, l1, l2) {
+  if (anyList.length == 0) return;
+
+  const list1 = l1.slice();
+  const list2 = l2.slice();
+  const listAny = anyList.slice();
+  const lengthListAny = listAny.length;
+
+  console.log(
+    "START LENGTHS",
+    "sizeAny",
+    listAny.length,
+    lengthListAny,
+    "size1",
+    list1.length,
+    "size2",
+    list2.length
+  );
+
+  let loop = 0;
+  let done = false;
+  while (!done || listAny.length > 0) {
+    // default: case 0: same length
+    // split listany and add half to each
+
+    // case 1: first list is bigger
+    // splice listany and add difference to second list
+    // split remaining listany between both lists
+
+    // case 2: second list is bigger
+    // splice listany and add difference to first list
+    // split remaining listany between both lists
+
+    let diff = list1.length - list2.length;
+    let maxIndex =
+      Math.abs(diff) < listAny.length ? diff - 1 : listAny.length - 1;
+    if (maxIndex == 0) maxIndex = 1;
+    // console.log("diff", diff);
+    // console.log("maxIndex", maxIndex);
+
+    if (diff > 0) {
+      list2.push(...listAny.splice(0, maxIndex));
+    } else if (diff < 0) {
+      list1.push(...listAny.splice(0, maxIndex));
+    } else {
+      list1.push(...listAny.splice(0, listAny.length / 2));
+      list2.push(...listAny.splice(0, listAny.length));
+      done = true;
+    }
+    loop++;
+  }
+  console.log("loop count", loop);
+  console.log(
+    "FINAL LENGTHS",
+    "sizeAny",
+    listAny.length,
+    "size1",
+    list1.length,
+    "size2",
+    list2.length
+  );
 }
 
 function displayLists(l1, l2, l3, l4) {
@@ -95,4 +159,5 @@ function displayLists(l1, l2, l3, l4) {
       `;
 }
 
-document.getElementById("input-file").addEventListener("change", processXLS);
+// document.getElementById("input-file").addEventListener("change", processXLS);
+document.getElementById("btn-sort").addEventListener("click", processXLS);

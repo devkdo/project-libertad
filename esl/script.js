@@ -76,9 +76,9 @@ function processXLS() {
             break;
         }
       });
-      evenDistribute(monAny, mon1, mon2);
-      evenDistribute(tueAny, tue1, tue2);
-      // displayLists(mon1, mon2, tue1, tue2);
+      const mondays = evenDistribute(monAny, mon1, mon2);
+      const tuesdays = evenDistribute(tueAny, tue1, tue2);
+      displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
     };
     reader.readAsArrayBuffer(file);
   } else {
@@ -137,7 +137,7 @@ function evenDistribute(anyList, l1, l2) {
     }
     loop++;
   }
-  console.log("loop count", loop);
+  // console.log("loop count", loop);
   console.log(
     "FINAL LENGTHS",
     "sizeAny",
@@ -147,15 +147,32 @@ function evenDistribute(anyList, l1, l2) {
     "size2",
     list2.length
   );
+  return { beg: list1, nonbeg: list2 };
 }
 
 function displayLists(l1, l2, l3, l4) {
   const output = document.getElementById("output");
   output.innerHTML = `
-        <h3>Monday Beginner</h3><pre>${JSON.stringify(l1, null, 2)}</pre>
-        <h3>Monday Non-Beginner</h3><pre>${JSON.stringify(l2, null, 2)}</pre>
-        <h3>Tuesday Beginner</h3><pre>${JSON.stringify(l3, null, 2)}</pre>
-        <h3>Tuesday Non-Beginner</h3><pre>${JSON.stringify(l4, null, 2)}</pre>
+        <h3>Monday Beginner (${l1.length})</h3><pre>${JSON.stringify(
+    l1,
+    null,
+    2
+  )}</pre>
+        <h3>Monday Non-Beginner (${l2.length})</h3><pre>${JSON.stringify(
+    l2,
+    null,
+    2
+  )}</pre>
+        <h3>Tuesday Beginner (${l3.length})</h3><pre>${JSON.stringify(
+    l3,
+    null,
+    2
+  )}</pre>
+        <h3>Tuesday Non-Beginner (${l4.length})</h3><pre>${JSON.stringify(
+    l4,
+    null,
+    2
+  )}</pre>
       `;
 }
 

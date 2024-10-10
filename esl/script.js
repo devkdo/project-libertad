@@ -16,7 +16,8 @@ const A_DAYTUE = "Tuesday - martes - terça-feira";
 
 // document.getElementById("btn-sort").addEventListener("click", getClasses);
 // document.getElementById("btn-emails").addEventListener("click", getEmails);
-document.getElementById("btn-emails").addEventListener("click", processXLS);
+document.getElementById("btn-sort").addEventListener("click", processXLSClasses);
+document.getElementById("btn-emails").addEventListener("click", processXLSEmails);
 
 // function getEmails(){
 //   let result=[];
@@ -35,7 +36,8 @@ document.getElementById("btn-emails").addEventListener("click", processXLS);
 //   displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
 // }
 
-function processXLS(result) {
+function processXLSEmails() {
+  resetOutput();
   const fileInput = document.getElementById("input-file");
   const file = fileInput.files[0];
 
@@ -107,7 +109,77 @@ function processXLS(result) {
     alert("Please upload an XLS/XLSX file.");
   }
 }
+function processXLSClasses() {
+  resetOutput();
+  const fileInput = document.getElementById("input-file");
+  const file = fileInput.files[0];
 
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const fileData = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(fileData, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      const headers = jsonData[0];
+      const splitData = jsonData.slice(1).map((row) => {
+        let obj = {};
+        headers.forEach((header, index) => {
+          if (
+            header === Q_NAME ||
+            header === Q_EMAIL ||
+            header === Q_DAY ||
+            header === Q_LEVEL
+          ) {
+            obj[header] = row[index];
+          }
+        });
+        return obj;
+      });
+
+      const mon1 = [];
+      const mon2 = [];
+      const monAny = [];
+      const tue1 = [];
+      const tue2 = [];
+      const tueAny = [];
+
+      splitData.forEach((student) => {
+        const name = student[Q_NAME];
+        const email = student[Q_EMAIL];
+        const day = student[Q_DAY];
+        const level = student[Q_LEVEL];
+        const studentInfo = { name, email };
+
+        switch (day) {
+          case A_DAYMON:
+            if (level === A_LEVEL1) mon1.push(studentInfo);
+            else if (level === A_LEVEL3) mon2.push(studentInfo);
+            else monAny.push(studentInfo);
+            break;
+
+          case A_DAYTUE:
+            if (level === A_LEVEL1) tue1.push(studentInfo);
+            else if (level === A_LEVEL3) tue2.push(studentInfo);
+            else tueAny.push(studentInfo);
+            break;
+
+          default:
+            break;
+        }
+      });
+      const mondays = evenDistribute(monAny, mon1, mon2);
+      const tuesdays = evenDistribute(tueAny, tue1, tue2);
+      displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+    };
+    reader.readAsArrayBuffer(file);
+    
+  } else {
+    alert("Please upload an XLS/XLSX file.");
+  }
+}
 function evenDistribute(anyList, l1, l2) {
   if (anyList.length == 0) return;
 
@@ -177,10 +249,10 @@ function displayEmails(l1, l2, l3, l4) {
   const output2 = document.getElementById("output2");
   const output3 = document.getElementById("output3");
   const output4 = document.getElementById("output4");
-  outputHeaders1.innerHTML = `<h3>Mailing list</h3><b>Monday Beginner (${l1.length})</b>`;
-  outputHeaders2.innerHTML = `<h3>Mailing list</h3><b>Monday NonBeginner (${l2.length})</b>`;
-  outputHeaders3.innerHTML = `<h3>Mailing list</h3><b>Tuesday Beginner (${l3.length})</b>`;
-  outputHeaders4.innerHTML = `<h3>Mailing list</h3><b>Tuesday NonBeginner (${l4.length})</b>`;
+  outputHeaders1.innerHTML = `<h3>Mailing List</h3><b>Monday Beginner (${l1.length})</b>`;
+  outputHeaders2.innerHTML = `<b>Monday NonBeginner (${l2.length})</b>`;
+  outputHeaders3.innerHTML = `<b>Tuesday Beginner (${l3.length})</b>`;
+  outputHeaders4.innerHTML = `<b>Tuesday NonBeginner (${l4.length})</b>`;
   output1.textContent += getEmailString(l1);
   output2.textContent += getEmailString(l2);
   output3.textContent += getEmailString(l3);
@@ -188,28 +260,45 @@ function displayEmails(l1, l2, l3, l4) {
 }
 
 function displayLists(l1, l2, l3, l4) {
-  const output = document.getElementById("output");
-  output.innerHTML = `<div class="section-green">
-        <h3>Monday Beginner (${l1.length})</h3><pre>${JSON.stringify(
-    l1,
-    null,
-    2
-  )}</pre></div>
-        <div class="section-green"><h3>Monday Non-Beginner (${l2.length})</h3><pre>${JSON.stringify(
-    l2,
-    null,
-    2
-  )}</pre></div>
-        <div class="section-green"><h3>Tuesday Beginner (${l3.length})</h3><pre>${JSON.stringify(
-    l3,
-    null,
-    2
-  )}</pre></div>
-        <div class="section-green"><h3>Tuesday Non-Beginner (${l4.length})</h3><pre>${JSON.stringify(
-    l4,
-    null,
-    2
-  )}</pre></div>
-      `;
+  const outputContainer = document.getElementById("output-container");
+  outputContainer.classList.add("section-green");
+  
+  const outputHeaders1 = document.getElementById("output-headers1");
+  const outputHeaders2 = document.getElementById("output-headers2");
+  const outputHeaders3 = document.getElementById("output-headers3");
+  const outputHeaders4 = document.getElementById("output-headers4");
+  const output1 = document.getElementById("output1");
+  const output2 = document.getElementById("output2");
+  const output3 = document.getElementById("output3");
+  const output4 = document.getElementById("output4");
+  outputHeaders1.innerHTML = `<h3>Monday Beginner (${l1.length})</h3>`;
+  output1.innerHTML = `<pre>${JSON.stringify(l1,null,2)}</pre>`;
+  outputHeaders2.innerHTML = `<h3>Monday Non-Beginner (${l2.length})</h3>`;
+  output2.innerHTML = `<pre>${JSON.stringify(    l2,    null,    2  )}</pre>`;
+  outputHeaders3.innerHTML = `<h3>Tuesday Beginner (${l3.length})</h3>`;
+  output3.innerHTML = `<pre>${JSON.stringify(    l3,    null,    2  )}</pre>`
+  outputHeaders4.innerHTML = `<h3>Tuesday Non-Beginner (${l4.length})</h3>`;
+  output4.innerHTML = `<pre>${JSON.stringify(l4,null,2)}</pre>`;
 }
 
+function resetOutput(){
+  // const outputContainer = document.getElementById("output-container");
+  // outputContainer.classList.remove("section-green");
+  
+  const outputHeaders1 = document.getElementById("output-headers1");
+  const outputHeaders2 = document.getElementById("output-headers2");
+  const outputHeaders3 = document.getElementById("output-headers3");
+  const outputHeaders4 = document.getElementById("output-headers4");
+  const output1 = document.getElementById("output1");
+  const output2 = document.getElementById("output2");
+  const output3 = document.getElementById("output3");
+  const output4 = document.getElementById("output4");
+  outputHeaders1.innerHTML = ``;
+  outputHeaders2.innerHTML = ``;
+  outputHeaders3.innerHTML = ``;
+  outputHeaders4.innerHTML = ``;
+  output1.textContent = ``;
+  output2.textContent = ``;
+  output3.textContent = ``;
+  output4.textContent = ``;
+}

@@ -14,10 +14,28 @@ const A_LEVEL3 =
 const A_DAYMON = "Monday - lunes - segunda-feira";
 const A_DAYTUE = "Tuesday - martes - terça-feira";
 
-document.getElementById("btn-sort").addEventListener("click", processXLS);
+// document.getElementById("btn-sort").addEventListener("click", getClasses);
+// document.getElementById("btn-emails").addEventListener("click", getEmails);
+document.getElementById("btn-emails").addEventListener("click", processXLS);
 
+// function getEmails(){
+//   let result=[];
+//   processXLS(result);
+//   console.log("processed result", result);
+  
+//   const mondays = result[0];
+//   const tuesdays = result[1];
+//   displayEmails(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+  
+// }
+// function getClasses(){
+//   const result = processXLS();
+//   const mondays = result[0];
+//   const tuesdays = result[1];
+//   displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+// }
 
-function processXLS() {
+function processXLS(result) {
   const fileInput = document.getElementById("input-file");
   const file = fileInput.files[0];
 
@@ -79,10 +97,12 @@ function processXLS() {
       });
       const mondays = evenDistribute(monAny, mon1, mon2);
       const tuesdays = evenDistribute(tueAny, tue1, tue2);
-      // displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
       displayEmails(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      // result = (new Array([mondays, tuesdays]));
+      // console.log("result", result);
     };
     reader.readAsArrayBuffer(file);
+    
   } else {
     alert("Please upload an XLS/XLSX file.");
   }
@@ -130,15 +150,15 @@ function evenDistribute(anyList, l1, l2) {
     }
     loop++;
   }
-
-  console.log(`Distributed: beginner (${list1.length}), intermediate (${listAny.length}), nonbeginner (${list2.length})`);
-
+  
+ console.log(`Distributed: beginner (${list1.length}), intermediate (${listAny.length}), nonbeginner (${list2.length})`);
+  
   return { beg: list1, nonbeg: list2 };
 }
 
-function getEmailString(list) {
+function getEmailString(list){
   let emails = "";
-  for (let student of list.values()) {
+  for(let student of list.values()){
     const entry = `"${student.name}"<${student.email}>,`;
     emails += entry;
   }
@@ -146,11 +166,25 @@ function getEmailString(list) {
 }
 
 function displayEmails(l1, l2, l3, l4) {
-  const emailstring = getEmailString(l1);
-  const output = document.getElementById("output");
-  output.classList.add("section-green");
-  output.innerHTML = `<h3>Mailing list</h3><b>Monday Beginner (${l1.length})</b>`;
-  output.textContent += emailstring;
+  const outputContainer = document.getElementById("output-container");
+  outputContainer.classList.add("section-green");
+  
+  const outputHeaders1 = document.getElementById("output-headers1");
+  const outputHeaders2 = document.getElementById("output-headers2");
+  const outputHeaders3 = document.getElementById("output-headers3");
+  const outputHeaders4 = document.getElementById("output-headers4");
+  const output1 = document.getElementById("output1");
+  const output2 = document.getElementById("output2");
+  const output3 = document.getElementById("output3");
+  const output4 = document.getElementById("output4");
+  outputHeaders1.innerHTML = `<h3>Mailing list</h3><b>Monday Beginner (${l1.length})</b>`;
+  outputHeaders2.innerHTML = `<h3>Mailing list</h3><b>Monday NonBeginner (${l2.length})</b>`;
+  outputHeaders3.innerHTML = `<h3>Mailing list</h3><b>Tuesday Beginner (${l3.length})</b>`;
+  outputHeaders4.innerHTML = `<h3>Mailing list</h3><b>Tuesday NonBeginner (${l4.length})</b>`;
+  output1.textContent += getEmailString(l1);
+  output2.textContent += getEmailString(l2);
+  output3.textContent += getEmailString(l3);
+  output4.textContent += getEmailString(l4);
 }
 
 function displayLists(l1, l2, l3, l4) {

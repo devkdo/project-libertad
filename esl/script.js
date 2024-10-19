@@ -1,40 +1,83 @@
-const Q_NAME = "Nombre y Apellidos - Nomes e Sobrenomes - First and Last Names";
-const Q_EMAIL = "Email Address";
-const Q_LEVEL =
-  "¿Cuál es su nivel de inglés? Qual é o seu nível de inglês? What is your level of English?";
-const Q_DAY =
-  "Which night do you prefer? ¿Qué noche prefiere? Qual noite você prefere?";
+import constants from './constants.js';
 
-const A_LEVEL1 =
-  "I don't speak or understand any English. No hablo ni entiendo nada de inglés. Eu não falo nem entendo nenhum inglês.";
-const A_LEVEL2 =
-  "I speak and understand a little bit of English. Hablo y entiendo un poco de inglés. Falo e entendo um pouco de inglês.";
-const A_LEVEL3 =
-  "I am comfortable having short conversations in English. Estoy cómodo para tener conversaciones cortas en inglés. Sinto-me confortável em conversas curtas em inglês.";
-const A_DAYMON = "Monday - lunes - segunda-feira";
-const A_DAYTUE = "Tuesday - martes - terça-feira";
-
-// document.getElementById("btn-sort").addEventListener("click", getClasses);
-// document.getElementById("btn-emails").addEventListener("click", getEmails);
 document.getElementById("btn-sort").addEventListener("click", processXLSClasses);
 document.getElementById("btn-emails").addEventListener("click", processXLSEmails);
+document.getElementById("btn-students").addEventListener("click", processXLSEmailsAndPhone);
+// document.getElementById("btn-dl").addEventListener("click", processAttendance);
 
-// function getEmails(){
-//   let result=[];
-//   processXLS(result);
-//   console.log("processed result", result);
-  
-//   const mondays = result[0];
-//   const tuesdays = result[1];
-//   displayEmails(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
-  
-// }
-// function getClasses(){
-//   const result = processXLS();
-//   const mondays = result[0];
-//   const tuesdays = result[1];
-//   displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
-// }
+function callProcess(){
+  resetOutput();
+  const fileInput = document.getElementById("input-file");
+  const { mondays, tuesdays } = processXLS(fileInput);
+  displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+  console.log("result", mondays, tuesdays);
+}
+
+function processXLS(fileInput) {
+  const file = fileInput.files[0];
+
+  if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+          const fileData = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(fileData, { type: "array" });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          const headers = jsonData[0];
+
+          const splitData = jsonData.slice(1).map((row) => {
+              let obj = {};
+              headers.forEach((header, index) => {
+                  if (
+                      header === constants.Q_NAME ||
+                      header === constants.Q_EMAIL ||
+                      header === constants.Q_DAY ||
+                      header === constants.Q_LEVEL
+                  ) {
+                      obj[header] = row[index];
+                  }
+              });
+              return obj;
+          });
+
+          const mon1 = [], mon2 = [], monAny = [];
+          const tue1 = [], tue2 = [], tueAny = [];
+
+          splitData.forEach((student) => {
+              const name = student[constants.Q_NAME];
+              const email = student[constants.Q_EMAIL];
+              const day = student[constants.Q_DAY];
+              const level = student[constants.Q_LEVEL];
+              const studentInfo = { name, email };
+
+              switch (day) {
+                  case constants.A_DAYMON:
+                      if (level === constants.A_LEVEL1) mon1.push(studentInfo);
+                      else if (level === constants.A_LEVEL3) mon2.push(studentInfo);
+                      else monAny.push(studentInfo);
+                      break;
+                  case constants.A_DAYTUE:
+                      if (level === constants.A_LEVEL1) tue1.push(studentInfo);
+                      else if (level === constants.A_LEVEL3) tue2.push(studentInfo);
+                      else tueAny.push(studentInfo);
+                      break;
+                  default:
+                      break;
+              }
+          });
+
+          const mondays = evenDistribute(monAny, mon1, mon2);
+          const tuesdays = evenDistribute(tueAny, tue1, tue2);
+
+          // Return the lists for Mondays and Tuesdays
+          return { mondays, tuesdays };
+      };
+      reader.readAsArrayBuffer(file);
+  } else {
+      alert("Please upload an XLS/XLSX file.");
+  }
+}
 
 function processXLSEmails() {
   resetOutput();
@@ -55,10 +98,10 @@ function processXLSEmails() {
         let obj = {};
         headers.forEach((header, index) => {
           if (
-            header === Q_NAME ||
-            header === Q_EMAIL ||
-            header === Q_DAY ||
-            header === Q_LEVEL
+            header === constants.Q_NAME ||
+            header === constants.Q_EMAIL ||
+            header === constants.Q_DAY ||
+            header === constants.Q_LEVEL
           ) {
             obj[header] = row[index];
           }
@@ -74,22 +117,22 @@ function processXLSEmails() {
       const tueAny = [];
 
       splitData.forEach((student) => {
-        const name = student[Q_NAME];
-        const email = student[Q_EMAIL];
-        const day = student[Q_DAY];
-        const level = student[Q_LEVEL];
+        const name = student[constants.Q_NAME];
+        const email = student[constants.Q_EMAIL];
+        const day = student[constants.Q_DAY];
+        const level = student[constants.Q_LEVEL];
         const studentInfo = { name, email };
 
         switch (day) {
-          case A_DAYMON:
-            if (level === A_LEVEL1) mon1.push(studentInfo);
-            else if (level === A_LEVEL3) mon2.push(studentInfo);
+          case constants.A_DAYMON:
+            if (level === constants.A_LEVEL1) mon1.push(studentInfo);
+            else if (level === constants.A_LEVEL3) mon2.push(studentInfo);
             else monAny.push(studentInfo);
             break;
 
-          case A_DAYTUE:
-            if (level === A_LEVEL1) tue1.push(studentInfo);
-            else if (level === A_LEVEL3) tue2.push(studentInfo);
+          case constants.A_DAYTUE:
+            if (level === constants.A_LEVEL1) tue1.push(studentInfo);
+            else if (level === constants.A_LEVEL3) tue2.push(studentInfo);
             else tueAny.push(studentInfo);
             break;
 
@@ -100,6 +143,85 @@ function processXLSEmails() {
       const mondays = evenDistribute(monAny, mon1, mon2);
       const tuesdays = evenDistribute(tueAny, tue1, tue2);
       displayEmails(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      // createExcel(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      
+      // result = (new Array([mondays, tuesdays]));
+      // console.log("result", result);
+    };
+    reader.readAsArrayBuffer(file);
+    
+  } else {
+    alert("Please upload an XLS/XLSX file.");
+  }
+}
+function processXLSEmailsAndPhone() {
+  resetOutput();
+  const fileInput = document.getElementById("input-file");
+  const file = fileInput.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const fileData = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(fileData, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      const headers = jsonData[0];
+      const splitData = jsonData.slice(1).map((row) => {
+        let obj = {};
+        headers.forEach((header, index) => {
+          if (
+            header === constants.Q_NAME ||
+            header === constants.Q_EMAIL ||
+            header === constants.Q_PHONE ||
+            header === constants.Q_DAY ||
+            header === constants.Q_LEVEL
+          ) {
+            obj[header] = row[index];
+          }
+        });
+        return obj;
+      });
+
+      const mon1 = [];
+      const mon2 = [];
+      const monAny = [];
+      const tue1 = [];
+      const tue2 = [];
+      const tueAny = [];
+
+      splitData.forEach((student) => {
+        const name = student[constants.Q_NAME];
+        const email = student[constants.Q_EMAIL];
+        const phone = student[constants.Q_PHONE];
+        const day = student[constants.Q_DAY];
+        const level = student[constants.Q_LEVEL];
+        const studentInfo = { name, email, phone };
+
+        switch (day) {
+          case constants.A_DAYMON:
+            if (level === constants.A_LEVEL1) mon1.push(studentInfo);
+            else if (level === constants.A_LEVEL3) mon2.push(studentInfo);
+            else monAny.push(studentInfo);
+            break;
+
+          case constants.A_DAYTUE:
+            if (level === constants.A_LEVEL1) tue1.push(studentInfo);
+            else if (level === constants.A_LEVEL3) tue2.push(studentInfo);
+            else tueAny.push(studentInfo);
+            break;
+
+          default:
+            break;
+        }
+      });
+      const mondays = evenDistribute(monAny, mon1, mon2);
+      const tuesdays = evenDistribute(tueAny, tue1, tue2);
+      displayStudentInfo(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      // createExcel(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      
       // result = (new Array([mondays, tuesdays]));
       // console.log("result", result);
     };
@@ -128,10 +250,10 @@ function processXLSClasses() {
         let obj = {};
         headers.forEach((header, index) => {
           if (
-            header === Q_NAME ||
-            header === Q_EMAIL ||
-            header === Q_DAY ||
-            header === Q_LEVEL
+            header === constants.Q_NAME ||
+            header === constants.Q_EMAIL ||
+            header === constants.Q_DAY ||
+            header === constants.Q_LEVEL
           ) {
             obj[header] = row[index];
           }
@@ -147,22 +269,22 @@ function processXLSClasses() {
       const tueAny = [];
 
       splitData.forEach((student) => {
-        const name = student[Q_NAME];
-        const email = student[Q_EMAIL];
-        const day = student[Q_DAY];
-        const level = student[Q_LEVEL];
+        const name = student[constants.Q_NAME];
+        const email = student[constants.Q_EMAIL];
+        const day = student[constants.Q_DAY];
+        const level = student[constants.Q_LEVEL];
         const studentInfo = { name, email };
 
         switch (day) {
-          case A_DAYMON:
-            if (level === A_LEVEL1) mon1.push(studentInfo);
-            else if (level === A_LEVEL3) mon2.push(studentInfo);
+          case constants.A_DAYMON:
+            if (level === constants.A_LEVEL1) mon1.push(studentInfo);
+            else if (level === constants.A_LEVEL3) mon2.push(studentInfo);
             else monAny.push(studentInfo);
             break;
 
-          case A_DAYTUE:
-            if (level === A_LEVEL1) tue1.push(studentInfo);
-            else if (level === A_LEVEL3) tue2.push(studentInfo);
+          case constants.A_DAYTUE:
+            if (level === constants.A_LEVEL1) tue1.push(studentInfo);
+            else if (level === constants.A_LEVEL3) tue2.push(studentInfo);
             else tueAny.push(studentInfo);
             break;
 
@@ -173,6 +295,7 @@ function processXLSClasses() {
       const mondays = evenDistribute(monAny, mon1, mon2);
       const tuesdays = evenDistribute(tueAny, tue1, tue2);
       displayLists(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
+      // createExcel(mondays.beg, mondays.nonbeg, tuesdays.beg, tuesdays.nonbeg);
     };
     reader.readAsArrayBuffer(file);
     
@@ -206,7 +329,7 @@ function evenDistribute(anyList, l1, l2) {
 
     let diff = list1.length - list2.length;
     let maxIndex =
-      Math.abs(diff) < listAny.length ? diff - 1 : listAny.length - 1;
+      Math.abs(diff) < listAny.length ? Math.abs(diff) - 1 : listAny.length - 1;
     if (maxIndex == 0) maxIndex = 1;
     // console.log("diff", diff);
     // console.log("maxIndex", maxIndex);
@@ -236,7 +359,50 @@ function getEmailString(list){
   }
   return emails;
 }
+function getStudentInfoString(list){
+  let names = "";
+  let emails = "";
+  let numbers = "";
+  let infoString = "";
+  for(let student of list.values()){
+    const entry = `${student.name}, ${student.email}, ${student.phone}<br>`;
+    names += "\n" + student.name;
+    emails += "\n" + student.email;
+    numbers += "\n" + student.phone; 
+    infoString += entry; 
+  }
+  console.log(names);
+  console.log(emails);
+  console.log(numbers);
+  console.log(infoString);
+  return infoString;
+}
 
+function displayStudentInfo(l1, l2, l3, l4) {
+  const outputContainer = document.getElementById("output-container");
+  outputContainer.classList.add("section-green");
+  
+  const outputHeaders1 = document.getElementById("output-headers1");
+  const outputHeaders2 = document.getElementById("output-headers2");
+  const outputHeaders3 = document.getElementById("output-headers3");
+  const outputHeaders4 = document.getElementById("output-headers4");
+  const output1 = document.getElementById("output1");
+  const output2 = document.getElementById("output2");
+  const output3 = document.getElementById("output3");
+  const output4 = document.getElementById("output4");
+  outputHeaders1.innerHTML = `<h3>Student Info</h3><b>Monday Beginner (${l1.length})</b>`;
+  outputHeaders2.innerHTML = `<b>Monday NonBeginner (${l2.length})</b>`;
+  outputHeaders3.innerHTML = `<b>Tuesday Beginner (${l3.length})</b>`;
+  outputHeaders4.innerHTML = `<b>Tuesday NonBeginner (${l4.length})</b>`;
+  console.log(outputHeaders1.textContent);
+  output1.innerHTML = getStudentInfoString(l1);
+  console.log(outputHeaders2.textContent);
+  output2.innerHTML = getStudentInfoString(l2);
+  console.log(outputHeaders3.textContent);
+  output3.innerHTML = getStudentInfoString(l3);
+  console.log(outputHeaders4.textContent);
+  output4.innerHTML = getStudentInfoString(l4);
+}
 function displayEmails(l1, l2, l3, l4) {
   const outputContainer = document.getElementById("output-container");
   outputContainer.classList.add("section-green");
@@ -301,4 +467,45 @@ function resetOutput(){
   output2.textContent = ``;
   output3.textContent = ``;
   output4.textContent = ``;
+}
+
+
+function createExcel(data1, data2, data3, data4) {
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Create worksheets for each data array
+    createWorksheet(data1, 'Class1');
+    createWorksheet(data2, 'Class2');
+    createWorksheet(data3, 'Class3');
+    createWorksheet(data4, 'Class4');
+  
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+
+    const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'attendance.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  
+    // Write the workbook to a file
+    // XLSX.writeFile(workbook, 'attendance.xlsx');
+}
+
+ function createWorksheet(data, sheetName) {
+   const worksheetData = data.map(item => [item.name, item.email]);
+   const worksheet = XLSX.utils.aoa_to_sheet([['Name', 'Email'], ...worksheetData]);
+   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+ }
+
+function s2ab(s) {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf); // view the buffer as array of 8-bit unsigned int
+    for (let i = 0; i < s.length; i++) {
+        view[i] = s.charCodeAt(i) & 0xFF; // Assign each character's code to the buffer
+    }
+    return buf;
 }

@@ -118,7 +118,7 @@ function processXLSEmails() {
 
       splitData.forEach((student) => {
         const name = student[constants.Q_NAME];
-        const email = student[constants.Q_EMAIL];
+        const email = validateAndFixEmail(student[constants.Q_EMAIL]);
         const day = student[constants.Q_DAY];
         const level = student[constants.Q_LEVEL];
         const studentInfo = { name, email };
@@ -194,8 +194,8 @@ function processXLSEmailsAndPhone() {
 
       splitData.forEach((student) => {
         const name = student[constants.Q_NAME];
-        const email = student[constants.Q_EMAIL];
-        const phone = student[constants.Q_PHONE];
+        const email = validateAndFixEmail(student[constants.Q_EMAIL]);
+        const phone = validateAndFixPhone( student[constants.Q_PHONE]);
         const day = student[constants.Q_DAY];
         const level = student[constants.Q_LEVEL];
         const studentInfo = { name, email, phone };
@@ -390,7 +390,7 @@ function displayStudentInfo(l1, l2, l3, l4) {
   const output2 = document.getElementById("output2");
   const output3 = document.getElementById("output3");
   const output4 = document.getElementById("output4");
-  outputHeaders1.innerHTML = `<h3>Student Info</h3><b>Monday Beginner (${l1.length})</b>`;
+  outputHeaders1.innerHTML = `<h3>Student Info </h3><b>Monday Beginner (${l1.length})</b>`;
   outputHeaders2.innerHTML = `<b>Monday NonBeginner (${l2.length})</b>`;
   outputHeaders3.innerHTML = `<b>Tuesday Beginner (${l3.length})</b>`;
   outputHeaders4.innerHTML = `<b>Tuesday NonBeginner (${l4.length})</b>`;
@@ -508,4 +508,55 @@ function s2ab(s) {
         view[i] = s.charCodeAt(i) & 0xFF; // Assign each character's code to the buffer
     }
     return buf;
+}
+function validateAndFixEmail(email) {
+  // Regular expression to validate email format
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Function to fix common domain typos
+  function fixDomainTypos(email) {
+      // List of common typos and their corrections
+      const typoCorrections = {
+          'or': 'org',
+          'cmo': 'com',
+          'con': 'com',
+          'co': 'com',
+          'cm': 'com'
+        };
+
+      return email.replace(/(@[^\s@]+\.)[^@]+$/, function(match, domain) {
+          return domain + (typoCorrections[match.slice(domain.length)] || match.slice(domain.length));
+      });
+  }
+
+  // Fix domain typos
+  let correctedEmail = fixDomainTypos(email);
+
+  // Validate corrected email
+  if (emailPattern.test(correctedEmail)) {
+      console.log('Email', email, 'Corrected Email:', correctedEmail);
+      return correctedEmail;
+  } else {
+      console.error('Invalid email format.', email);
+      return "invalid:" + email;
+  }
+}
+function validateAndFixPhone(phone) {
+  // Remove all non-digit characters
+  let digits = phone.toString().replace(/\D/g, '');
+
+  let correctedPhone = "";
+  // Format based on length and starting digit
+  if (digits.length === 10) {
+      correctedPhone = digits.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+  } else if (digits.length === 11 && digits.startsWith('1')) {
+      correctedPhone = digits.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, '$1-$2-$3-$4');
+  } else if (digits.length > 10) {
+      correctedPhone = digits.replace(/(\d+)(\d{3})(\d{3})(\d{4})/, '$1-$2-$3-$4');
+  } else {
+    console.error('Invalid phone format.', phone);
+    return "invalid:" + phone;
+  }
+  console.log('Phone', phone, 'Corrected Phone:', correctedPhone);
+  return correctedPhone;
 }
